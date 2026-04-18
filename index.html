@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Haninge Campservice | In/Ut-stämpling</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --card: #171717;
+      --card-2: #111111;
+      --text: #f5f5f5;
+      --muted: #bdbdbd;
+      --accent: #ff9800;
+      --border: rgba(255, 152, 0, 0.25);
+      --success: #2ecc71;
+      --danger: #ff5c5c;
+      --shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+      --radius: 18px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #000000 0%, #0c0c0c 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+
+    .header {
+      display: grid;
+      grid-template-columns: 130px 1fr;
+      gap: 22px;
+      align-items: center;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      box-shadow: var(--shadow);
+      border-radius: 24px;
+      padding: 22px;
+      margin-bottom: 26px;
+    }
+
+    .header img {
+      width: 100%;
+      max-width: 130px;
+      height: auto;
+      object-fit: contain;
+      display: block;
+    }
+
+    .header h1 {
+      margin: 0 0 8px;
+      font-size: clamp(1.8rem, 4vw, 2.7rem);
+      line-height: 1.1;
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 22px;
+    }
+
+    .card {
+      background: linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px;
+    }
+
+    .card h2 {
+      margin-top: 0;
+      font-size: 1.35rem;
+    }
+
+    .form-row {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    label {
+      font-weight: bold;
+      font-size: 0.95rem;
+    }
+
+    .employee-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .employee-btn {
+      width: 100%;
+      text-align: left;
+      background: #101010;
+      color: var(--text);
+      border: 1px solid #333;
+      padding: 14px 15px;
+      border-radius: 12px;
+      font-size: 0.98rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .employee-btn:hover {
+      transform: translateY(-1px);
+      border-color: var(--accent);
+    }
+
+    .employee-btn.active {
+      background: rgba(255, 152, 0, 0.14);
+      border-color: var(--accent);
+      color: #ffd08a;
+    }
+
+    .selected-person {
+      margin-top: 16px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      color: var(--muted);
+      font-weight: bold;
+    }
+
+    .month-select {
+      width: 100%;
+      padding: 14px 15px;
+      border-radius: 12px;
+      border: 1px solid #333;
+      background: #0b0b0b;
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 18px;
+    }
+
+    button {
+      border: none;
+      border-radius: 12px;
+      padding: 14px 18px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+      opacity: 0.96;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #111;
+    }
+
+    .btn-secondary {
+      background: #2a2a2a;
+      color: white;
+      border: 1px solid #3d3d3d;
+    }
+
+    .status-box {
+      margin-top: 22px;
+      padding: 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      min-height: 62px;
+      display: flex;
+      align-items: center;
+      color: var(--muted);
+    }
+
+    .status-box.success {
+      border-color: rgba(46, 204, 113, 0.35);
+      color: #c9f5da;
+    }
+
+    .status-box.error {
+      border-color: rgba(255, 92, 92, 0.35);
+      color: #ffd5d5;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .stat {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 14px;
+      padding: 14px;
+    }
+
+    .stat small {
+      display: block;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .stat strong {
+      font-size: 1.2rem;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .person-row,
+    .history-row {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .person-row {
+      grid-template-columns: 1.3fr 1fr auto;
+      align-items: center;
+    }
+
+    .history-row {
+      grid-template-columns: 1.2fr 0.9fr 0.8fr;
+      align-items: center;
+      font-size: 0.95rem;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      width: fit-content;
+    }
+
+    .pill.in {
+      background: rgba(46, 204, 113, 0.16);
+      color: #bff0d2;
+      border: 1px solid rgba(46, 204, 113, 0.35);
+    }
+
+    .pill.out {
+      background: rgba(255, 92, 92, 0.16);
+      color: #ffd3d3;
+      border: 1px solid rgba(255, 92, 92, 0.35);
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+
+    .empty {
+      color: var(--muted);
+      padding: 12px 0;
+    }
+
+    footer {
+      margin-top: 24px;
+      color: #9e9e9e;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 640px) {
+      .header {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+
+      .header img {
+        margin: 0 auto;
+      }
+
+      .person-row,
+      .history-row,
+      .stats {
+        grid-template-columns: 1fr;
+      }
+
+      .buttons {
+        flex-direction: column;
+      }
+
+      button {
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <img src="logo.png" alt="Haninge Campservice logga" />
+      <div>
+        <h1>Haninge Campservice</h1>
+        <p>Digital in/ut-stämpling för personalen</p>
+      </div>
+    </header>
+
+    <main class="grid">
+      <section class="card">
+        <h2>Stämpla in eller ut</h2>
+
+        <div class="form-row">
+          <label>Välj anställd</label>
+          <div class="employee-grid" id="employeeGrid">
+            <button type="button" class="employee-btn" data-name="Mikael Lundmark">Mikael Lundmark</button>
+            <button type="button" class="employee-btn" data-name="Peter Lundmark">Peter Lundmark</button>
+            <button type="button" class="employee-btn" data-name="Kent-Åke Lundmark">Kent-Åke Lundmark</button>
+            <button type="button" class="employee-btn" data-name="Annelie Lundmark">Annelie Lundmark</button>
+            <button type="button" class="employee-btn" data-name="Viggo Habolin-Wolkert">Viggo Habolin-Wolkert</button>
+            <button type="button" class="employee-btn" data-name="Nathalie Habolin">Nathalie Habolin</button>
+          </div>
+        </div>
+
+        <div class="selected-person" id="selectedPerson">Ingen vald ännu.</div>
+
+        <div class="form-row" style="margin-top: 18px;">
+          <label for="monthFilter">Välj månad</label>
+          <select id="monthFilter" class="month-select">
+            <option value="all">Alla månader</option>
+          </select>
+        </div>
+
+        <div class="buttons">
+          <button class="btn-primary" id="clockInBtn">Stämpla in</button>
+          <button class="btn-secondary" id="clockOutBtn">Stämpla ut</button>
+          <button class="btn-secondary" id="downloadCsvBtn">Ladda ner CSV för vald månad</button>
+        </div>
+
+        <div class="status-box" id="statusBox">Ansluter till databasen...</div>
+      </section>
+
+      <section class="card">
+        <h2>Översikt</h2>
+        <div class="stats">
+          <div class="stat">
+            <small>Inne just nu</small>
+            <strong id="insideCount">0</strong>
+          </div>
+          <div class="stat">
+            <small>Stämplingar i urvalet</small>
+            <strong id="todayCount">0</strong>
+          </div>
+        </div>
+
+        <div class="section-title">
+          <strong>Aktiv status</strong>
+        </div>
+        <div class="list" id="insideList"></div>
+      </section>
+    </main>
+
+    <section class="card" style="margin-top: 22px;">
+      <div class="section-title">
+        <h2 style="margin:0;">Senaste historik</h2>
+        <span class="muted">Sparas i Supabase</span>
+      </div>
+      <div class="list" id="historyList"></div>
+    </section>
+
+    <footer>
+      © Haninge Campservice – in/ut-stämpling
+    </footer>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://hrlrgjeumbpaeelqkmot.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_aVZnxeW1h38Nt8meTE5xWA_de0lFJN3';
+    const TABLE_NAME = 'clock_events';
+
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const employeeButtons = document.querySelectorAll('.employee-btn');
+    const selectedPerson = document.getElementById('selectedPerson');
+    const clockInBtn = document.getElementById('clockInBtn');
+    const clockOutBtn = document.getElementById('clockOutBtn');
+    const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+    const statusBox = document.getElementById('statusBox');
+    const monthFilter = document.getElementById('monthFilter');
+    const insideList = document.getElementById('insideList');
+    const historyList = document.getElementById('historyList');
+    const insideCount = document.getElementById('insideCount');
+    const todayCount = document.getElementById('todayCount');
+
+    let selectedEmployee = '';
+    let allEvents = [];
+    let selectedMonth = 'all';
+
+    function normalizeName(name) {
+      return (name || '').trim().replace(/\s+/g, ' ');
+    }
+
+    function formatDateTime(dateString) {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('sv-SE', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    }
+
+    function formatDate(dateString) {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('sv-SE', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(date);
+    }
+
+    function formatTime(dateString) {
+      const date = new Date(dateString);
+      return new Intl.DateTimeFormat('sv-SE', {
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(date);
+    }
+
+    function getMonthKey(dateString) {
+      const date = new Date(dateString);
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+    }
+
+    function formatMonthLabel(monthKey) {
+      const [year, month] = monthKey.split('-').map(Number);
+      const date = new Date(year, month - 1, 1);
+      const monthName = new Intl.DateTimeFormat('sv-SE', { month: 'long' }).format(date);
+      return `${monthName.charAt(0).toUpperCase()}${monthName.slice(1)} ${year}`;
+    }
+
+    function setSelectedEmployee(name) {
+      selectedEmployee = name;
+      employeeButtons.forEach(button => {
+        button.classList.toggle('active', button.dataset.name === name);
+      });
+      selectedPerson.textContent = name ? `Vald anställd/filter: ${name}` : 'Ingen vald ännu.';
+    }
+
+    function showStatus(message, type = '') {
+      statusBox.textContent = message;
+      statusBox.className = 'status-box';
+      if (type) {
+        statusBox.classList.add(type);
+      }
+    }
+
+    function getLatestStatusPerPerson(events) {
+      const latestByPerson = new Map();
+
+      events.forEach(event => {
+        const key = event.employee_name.toLowerCase();
+        const existing = latestByPerson.get(key);
+
+        if (!existing || new Date(event.created_at) > new Date(existing.created_at)) {
+          latestByPerson.set(key, event);
+        }
+      });
+
+      return Array.from(latestByPerson.values());
+    }
+
+    function getPeopleInside(events) {
+      return getLatestStatusPerPerson(events)
+        .filter(event => event.event_type === 'in')
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+    }
+
+    function getFilteredEvents() {
+      let events = allEvents;
+
+      if (selectedMonth !== 'all') {
+        events = events.filter(event => getMonthKey(event.created_at) === selectedMonth);
+      }
+
+      if (selectedEmployee) {
+        events = events.filter(
+          event => event.employee_name.toLowerCase() === selectedEmployee.toLowerCase()
+        );
+      }
+
+      return events;
+    }
+
+    function populateMonthFilter() {
+      const monthKeys = Array.from(
+        new Set(allEvents.map(event => getMonthKey(event.created_at)))
+      ).sort().reverse();
+
+      const previousValue = selectedMonth;
+      monthFilter.innerHTML = '<option value="all">Alla månader</option>';
+
+      monthKeys.forEach(monthKey => {
+        const option = document.createElement('option');
+        option.value = monthKey;
+        option.textContent = formatMonthLabel(monthKey);
+        monthFilter.appendChild(option);
+      });
+
+      if (monthKeys.includes(previousValue) || previousValue === 'all') {
+        monthFilter.value = previousValue;
+        selectedMonth = previousValue;
+      } else {
+        monthFilter.value = 'all';
+        selectedMonth = 'all';
+      }
+    }
+
+    function render() {
+      populateMonthFilter();
+
+      const visibleEvents = getFilteredEvents();
+      const insidePeople = getPeopleInside(visibleEvents);
+
+      insideCount.textContent = insidePeople.length;
+      todayCount.textContent = visibleEvents.length;
+
+      insideList.innerHTML = '';
+      if (insidePeople.length === 0) {
+        insideList.innerHTML = `<div class="empty">${
+          selectedEmployee
+            ? `Ingen aktiv stämpling för ${selectedEmployee} i valt filter.`
+            : 'Ingen personal är instämplad just nu för vald månad.'
+        }</div>`;
+      } else {
+        insidePeople.forEach(person => {
+          const row = document.createElement('div');
+          row.className = 'person-row';
+          row.innerHTML = `
+            <strong>${person.employee_name}</strong>
+            <span class="muted">Sedan ${formatDateTime(person.created_at)}</span>
+            <span class="pill in">Inne</span>
+          `;
+          insideList.appendChild(row);
+        });
+      }
+
+      historyList.innerHTML = '';
+      if (visibleEvents.length === 0) {
+        historyList.innerHTML = `<div class="empty">${
+          selectedEmployee
+            ? `Ingen historik för ${selectedEmployee} i valt filter.`
+            : 'Ingen historik för vald månad ännu.'
+        }</div>`;
+      } else {
+        visibleEvents.slice(0, 50).forEach(event => {
+          const row = document.createElement('div');
+          row.className = 'history-row';
+          row.innerHTML = `
+            <strong>${event.employee_name}</strong>
+            <span class="muted">${formatDateTime(event.created_at)}</span>
+            <span class="pill ${event.event_type}">
+              ${event.event_type === 'in' ? 'Stämplat in' : 'Stämplat ut'}
+            </span>
+          `;
+          historyList.appendChild(row);
+        });
+      }
+    }
+
+    async function loadEvents() {
+      showStatus('Hämtar historik från databasen...');
+
+      const { data, error } = await supabaseClient
+        .from(TABLE_NAME)
+        .select('id, employee_name, event_type, created_at')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error(error);
+        showStatus(`Kunde inte läsa från databasen: ${error.message}`, 'error');
+        return;
+      }
+
+      allEvents = data || [];
+      render();
+      showStatus('Databasen är ansluten och klar.', 'success');
+    }
+
+    async function addEvent(type) {
+      const name = normalizeName(selectedEmployee);
+
+      if (!name) {
+        showStatus('Du måste välja en anställd först.', 'error');
+        return;
+      }
+
+      const latestEvent = allEvents.find(
+        event => event.employee_name.toLowerCase() === name.toLowerCase()
+      );
+
+      if (type === 'in' && latestEvent?.event_type === 'in') {
+        showStatus(`${name} är redan instämplad.`, 'error');
+        return;
+      }
+
+      if (type === 'out' && (!latestEvent || latestEvent.event_type === 'out')) {
+        showStatus(`${name} är inte instämplad just nu.`, 'error');
+        return;
+      }
+
+      showStatus('Sparar stämplingen i databasen...');
+
+      const { error } = await supabaseClient
+        .from(TABLE_NAME)
+        .insert([{ employee_name: name, event_type: type }]);
+
+      if (error) {
+        console.error(error);
+        showStatus(`Kunde inte spara stämplingen: ${error.message}`, 'error');
+        return;
+      }
+
+      await loadEvents();
+      setSelectedEmployee('');
+      showStatus(
+        `${name} ${type === 'in' ? 'stämplade in' : 'stämplade ut'} ${formatDateTime(new Date().toISOString())}.`,
+        'success'
+      );
+    }
+
+    function escapeCsvValue(value) {
+      const stringValue = String(value ?? '');
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+
+    function downloadCsv() {
+      const exportEvents = getFilteredEvents();
+
+      if (exportEvents.length === 0) {
+        showStatus('Det finns ingen historik att ladda ner för det valda filtret.', 'error');
+        return;
+      }
+
+      const rows = [
+        ['Namn', 'Typ', 'Datum', 'Tid'],
+        ...exportEvents
+          .slice()
+          .reverse()
+          .map(event => [
+            event.employee_name,
+            event.event_type === 'in' ? 'In' : 'Ut',
+            formatDate(event.created_at),
+            formatTime(event.created_at)
+          ])
+      ];
+
+      const csvContent = rows
+        .map(row => row.map(escapeCsvValue).join(';'))
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      const today = new Date();
+      const datePart = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const filePart = selectedMonth === 'all'
+        ? `alla-manader-${datePart}`
+        : `${selectedMonth}-${datePart}`;
+
+      link.href = url;
+      link.download = `haninge-campservice-stamplingar-${filePart}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      showStatus('CSV-filen laddades ner.', 'success');
+    }
+
+    employeeButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        const clickedName = button.dataset.name;
+        const isSameEmployee = selectedEmployee === clickedName;
+
+        setSelectedEmployee(isSameEmployee ? '' : clickedName);
+        render();
+
+        if (isSameEmployee) {
+          showStatus(
+            selectedMonth === 'all'
+              ? 'Personfiltret är borttaget. Visar alla anställda för alla månader.'
+              : `Personfiltret är borttaget. Visar alla anställda för ${formatMonthLabel(selectedMonth)}.`,
+            'success'
+          );
+        } else {
+          showStatus(
+            selectedMonth === 'all'
+              ? `Valt filter: ${clickedName} för alla månader.`
+              : `Valt filter: ${clickedName} för ${formatMonthLabel(selectedMonth)}.`,
+            'success'
+          );
+        }
+      });
+    });
+
+    clockInBtn.addEventListener('click', () => addEvent('in'));
+    clockOutBtn.addEventListener('click', () => addEvent('out'));
+    downloadCsvBtn.addEventListener('click', downloadCsv);
+
+    monthFilter.addEventListener('change', (event) => {
+      selectedMonth = event.target.value;
+      render();
+
+      showStatus(
+        selectedMonth === 'all'
+          ? (
+              selectedEmployee
+                ? `Visar ${selectedEmployee} för alla månader.`
+                : 'Visar historik för alla månader.'
+            )
+          : (
+              selectedEmployee
+                ? `Visar ${selectedEmployee} för ${formatMonthLabel(selectedMonth)}.`
+                : `Visar historik för ${formatMonthLabel(selectedMonth)}.`
+            ),
+        'success'
+      );
+    });
+
+    loadEvents();
+  </script>
+</body>
+</html>

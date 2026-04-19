@@ -214,6 +214,12 @@
       border: 1px solid rgba(255,92,92,0.35);
     }
 
+    .pill.correction {
+      background: rgba(255, 152, 0, 0.16);
+      color: #ffd08a;
+      border: 1px solid rgba(255, 152, 0, 0.35);
+    }
+
     .muted {
       color: var(--muted);
     }
@@ -230,6 +236,33 @@
     .small {
       font-size: 0.9rem;
       color: var(--muted);
+    }
+
+    .form-box {
+      margin-top: 22px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .form-box h3 {
+      margin-top: 0;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      background: #111;
+      color: #fff;
+      border: 1px solid #333;
+      font: inherit;
     }
 
     @media (max-width: 700px) {
@@ -324,11 +357,40 @@
           <h2 style="margin:0;">Adminvy – dagens personalliggare</h2>
           <div class="small">Visa upp i lokalen eller exportera</div>
         </div>
-        <button class="secondary-btn" id="downloadTodayCsvBtn" type="button">Ladda ner dagens liggare</button>
-        <button class="secondary-btn" id="printTodayBtn" type="button">Skriv ut dagens liggare</button>
+        <div class="action-row" style="margin-top:0;">
+          <button class="secondary-btn" id="downloadTodayCsvBtn" type="button">Ladda ner dagens liggare</button>
+          <button class="secondary-btn" id="printTodayBtn" type="button">Skriv ut dagens liggare</button>
+          <button class="secondary-btn" id="openCorrectionBtn" type="button">Visa/dölj korrigering</button>
+        </div>
       </div>
 
       <div class="list" id="todayList"></div>
+
+      <div class="form-box hidden" id="correctionBox">
+        <h3>Lägg till korrigering</h3>
+        <div class="form-grid">
+          <select id="correctionEmployeeSelect" class="field">
+            <option value="">Välj person</option>
+          </select>
+
+          <select id="correctionTypeSelect" class="field">
+            <option value="correction">Korrigering</option>
+            <option value="in">Korrigering: In</option>
+            <option value="out">Korrigering: Ut</option>
+          </select>
+
+          <input id="correctionTimeInput" class="field" type="datetime-local" />
+
+          <input
+            id="correctionNoteInput"
+            class="field"
+            type="text"
+            placeholder="Beskriv varför korrigeringen görs"
+          />
+
+          <button class="secondary-btn" id="saveCorrectionBtn" type="button">Spara korrigering</button>
+        </div>
+      </div>
 
       <h3 style="margin-top:22px;">Senaste audit-logg</h3>
       <div class="list" id="auditList"></div>
@@ -354,6 +416,14 @@
     const todayList = document.getElementById('todayList');
     const auditList = document.getElementById('auditList');
     const adminToggleBtn = document.getElementById('adminToggleBtn');
+
+    const correctionBox = document.getElementById('correctionBox');
+    const openCorrectionBtn = document.getElementById('openCorrectionBtn');
+    const correctionEmployeeSelect = document.getElementById('correctionEmployeeSelect');
+    const correctionTypeSelect = document.getElementById('correctionTypeSelect');
+    const correctionTimeInput = document.getElementById('correctionTimeInput');
+    const correctionNoteInput = document.getElementById('correctionNoteInput');
+    const saveCorrectionBtn = document.getElementById('saveCorrectionBtn');
 
     let employees = [];
     let selectedEmployeeId = null;
@@ -410,6 +480,17 @@
       });
     }
 
+    function populateCorrectionEmployees() {
+      correctionEmployeeSelect.innerHTML = '<option value="">Välj person</option>';
+
+      employees.forEach(employee => {
+        const option = document.createElement('option');
+        option.value = employee.id;
+        option.textContent = employee.full_name;
+        correctionEmployeeSelect.appendChild(option);
+      });
+    }
+
     async function loadEmployees() {
       const { data, error } = await supabaseClient
         .from('employees')
@@ -424,6 +505,7 @@
 
       employees = data || [];
       renderEmployees();
+      populateCorrectionEmployees();
     }
 
     function getSelectedEmployee() {
@@ -497,7 +579,9 @@
       enteredPin = '';
       updatePinDisplay();
       renderEmployees();
+      populateCorrectionEmployees();
       adminCard.classList.add('hidden');
+      correctionBox.classList.add('hidden');
       userCard.classList.add('hidden');
       loginCard.classList.remove('hidden');
       showStatus('Utloggad.', 'success');
@@ -561,7 +645,7 @@
     async function loadMyHistory() {
       const { data, error } = await supabaseClient
         .from('personalliggare_events')
-        .select('id, employee_name, event_type, event_time')
+        .select('id, employee_name, event_type, event_time, note')
         .eq('employee_id', loggedInEmployee.id)
         .order('event_time', { ascending: false })
         .limit(20);
@@ -579,14 +663,19 @@
       }
 
       data.forEach(event => {
+        const typeClass = event.event_type === 'in' ? 'in' : event.event_type === 'out' ? 'out' : 'correction';
+        const typeLabel = event.event_type === 'in'
+          ? 'Stämplat in'
+          : event.event_type === 'out'
+            ? 'Stämplat ut'
+            : 'Korrigering';
+
         const row = document.createElement('div');
         row.className = 'row';
         row.innerHTML = `
           <strong>${event.employee_name}</strong>
-          <span class="muted">${formatDateTime(event.event_time)}</span>
-          <span class="pill ${event.event_type === 'in' ? 'in' : 'out'}">
-            ${event.event_type === 'in' ? 'Stämplat in' : 'Stämplat ut'}
-          </span>
+          <span class="muted">${formatDateTime(event.event_time)}${event.note ? `<br>${event.note}` : ''}</span>
+          <span class="pill ${typeClass}">${typeLabel}</span>
         `;
         myHistoryList.appendChild(row);
       });
@@ -608,7 +697,7 @@
 
       const { data, error } = await supabaseClient
         .from('personalliggare_events')
-        .select('employee_name, event_type, event_time')
+        .select('employee_name, event_type, event_time, note')
         .gte('event_time', start)
         .lte('event_time', end)
         .order('event_time', { ascending: false });
@@ -626,14 +715,19 @@
       }
 
       data.forEach(event => {
+        const typeClass = event.event_type === 'in' ? 'in' : event.event_type === 'out' ? 'out' : 'correction';
+        const typeLabel = event.event_type === 'in'
+          ? 'In'
+          : event.event_type === 'out'
+            ? 'Ut'
+            : 'Korrigering';
+
         const row = document.createElement('div');
         row.className = 'row';
         row.innerHTML = `
           <strong>${event.employee_name}</strong>
-          <span class="muted">${formatDateTime(event.event_time)}</span>
-          <span class="pill ${event.event_type === 'in' ? 'in' : 'out'}">
-            ${event.event_type === 'in' ? 'In' : 'Ut'}
-          </span>
+          <span class="muted">${formatDateTime(event.event_time)}${event.note ? `<br>${event.note}` : ''}</span>
+          <span class="pill ${typeClass}">${typeLabel}</span>
         `;
         todayList.appendChild(row);
       });
@@ -676,119 +770,120 @@
     }
 
     function downloadCsv(rows, filename) {
-  const csvContent = rows
-    .map(row => row.map(escapeCsvValue).join(';'))
-    .join('\n');
+      const csvContent = rows
+        .map(row => row.map(escapeCsvValue).join(';'))
+        .join('\n');
 
-  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
 
-  link.href = url;
-  link.download = filename;
+      link.href = url;
+      link.download = filename;
 
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
 
-  URL.revokeObjectURL(url);
-}
+      URL.revokeObjectURL(url);
+    }
 
-function printTodayList() {
-  const rows = Array.from(todayList.querySelectorAll('.row'));
+    function printTodayList() {
+      const rows = Array.from(todayList.querySelectorAll('.row'));
 
-  if (rows.length === 0) {
-    showUserStatus('Det finns inget att skriva ut för idag.', 'error');
-    return;
-  }
+      if (rows.length === 0) {
+        showUserStatus('Det finns inget att skriva ut för idag.', 'error');
+        return;
+      }
 
-  const printWindow = window.open('', '_blank');
+      const printWindow = window.open('', '_blank');
 
-  const rowsHtml = rows.map(row => {
-    const cells = row.querySelectorAll('strong, .muted, .pill');
-    const name = cells[0]?.textContent?.trim() || '';
-    const time = cells[1]?.textContent?.trim() || '';
-    const type = cells[2]?.textContent?.trim() || '';
+      const rowsHtml = rows.map(row => {
+        const cells = row.querySelectorAll('strong, .muted, .pill');
+        const name = cells[0]?.textContent?.trim() || '';
+        const time = cells[1]?.textContent?.trim() || '';
+        const type = cells[2]?.textContent?.trim() || '';
 
-    return `
-      <tr>
-        <td>${name}</td>
-        <td>${time}</td>
-        <td>${type}</td>
-      </tr>
-    `;
-  }).join('');
-
-  const today = new Intl.DateTimeFormat('sv-SE', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit'
-  }).format(new Date());
-
-  printWindow.document.write(`
-    <!DOCTYPE html>
-    <html lang="sv">
-    <head>
-      <meta charset="UTF-8">
-      <title>Dagens personalliggare</title>
-      <style>
-        body {
-          font-family: Arial, Helvetica, sans-serif;
-          padding: 24px;
-          color: #111;
-        }
-        h1, p {
-          margin: 0 0 12px;
-        }
-        .meta {
-          margin-bottom: 24px;
-        }
-        table {
-          width: 100%;
-          border-collapse: collapse;
-          margin-top: 16px;
-        }
-        th, td {
-          border: 1px solid #999;
-          padding: 10px;
-          text-align: left;
-        }
-        th {
-          background: #f2f2f2;
-        }
-      </style>
-    </head>
-    <body>
-      <h1>Haninge Campservice</h1>
-      <div class="meta">
-        <p><strong>Personalliggare</strong></p>
-        <p>Datum: ${today}</p>
-      </div>
-
-      <table>
-        <thead>
+        return `
           <tr>
-            <th>Namn</th>
-            <th>Tid</th>
-            <th>Typ</th>
+            <td>${name}</td>
+            <td>${time}</td>
+            <td>${type}</td>
           </tr>
-        </thead>
-        <tbody>
-          ${rowsHtml}
-        </tbody>
-      </table>
-    </body>
-    </html>
-  `);
+        `;
+      }).join('');
 
-  printWindow.document.close();
-  printWindow.focus();
-  printWindow.print();
-}
+      const today = new Intl.DateTimeFormat('sv-SE', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(new Date());
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="sv">
+        <head>
+          <meta charset="UTF-8">
+          <title>Dagens personalliggare</title>
+          <style>
+            body {
+              font-family: Arial, Helvetica, sans-serif;
+              padding: 24px;
+              color: #111;
+            }
+            h1, p {
+              margin: 0 0 12px;
+            }
+            .meta {
+              margin-bottom: 24px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 16px;
+            }
+            th, td {
+              border: 1px solid #999;
+              padding: 10px;
+              text-align: left;
+            }
+            th {
+              background: #f2f2f2;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Haninge Campservice</h1>
+          <div class="meta">
+            <p><strong>Personalliggare</strong></p>
+            <p>Datum: ${today}</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Namn</th>
+                <th>Tid</th>
+                <th>Typ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    }
+
     async function downloadMyHistory() {
       const { data, error } = await supabaseClient
         .from('personalliggare_events')
-        .select('employee_name, event_type, event_time')
+        .select('employee_name, event_type, event_time, note')
         .eq('employee_id', loggedInEmployee.id)
         .order('event_time', { ascending: true });
 
@@ -797,11 +892,12 @@ function printTodayList() {
         return;
       }
 
-      const rows = [['Namn', 'Typ', 'Tid']].concat(
+      const rows = [['Namn', 'Typ', 'Tid', 'Notering']].concat(
         (data || []).map(item => [
           item.employee_name,
           item.event_type,
-          formatDateTime(item.event_time)
+          formatDateTime(item.event_time),
+          item.note || ''
         ])
       );
 
@@ -818,7 +914,7 @@ function printTodayList() {
 
       const { data, error } = await supabaseClient
         .from('personalliggare_events')
-        .select('employee_name, event_type, event_time')
+        .select('employee_name, event_type, event_time, note')
         .gte('event_time', start)
         .lte('event_time', end)
         .order('event_time', { ascending: true });
@@ -828,16 +924,73 @@ function printTodayList() {
         return;
       }
 
-      const rows = [['Namn', 'Typ', 'Tid']].concat(
+      const rows = [['Namn', 'Typ', 'Tid', 'Notering']].concat(
         (data || []).map(item => [
           item.employee_name,
           item.event_type,
-          formatDateTime(item.event_time)
+          formatDateTime(item.event_time),
+          item.note || ''
         ])
       );
 
       downloadCsv(rows, 'dagens-personalliggare.csv');
       showUserStatus('Dagens personalliggare exporterad.', 'success');
+    }
+
+    async function saveCorrection() {
+      if (!loggedInEmployee || !loggedInEmployee.is_admin) {
+        showUserStatus('Endast admin kan lägga till korrigeringar.', 'error');
+        return;
+      }
+
+      const employeeId = Number(correctionEmployeeSelect.value);
+      const eventType = correctionTypeSelect.value;
+      const note = correctionNoteInput.value.trim();
+      const selectedTime = correctionTimeInput.value;
+
+      if (!employeeId) {
+        showUserStatus('Välj person för korrigeringen.', 'error');
+        return;
+      }
+
+      if (!note) {
+        showUserStatus('Skriv en förklaring till korrigeringen.', 'error');
+        return;
+      }
+
+      const employee = employees.find(item => item.id === employeeId);
+      if (!employee) {
+        showUserStatus('Kunde inte hitta vald person.', 'error');
+        return;
+      }
+
+      const eventTime = selectedTime ? new Date(selectedTime).toISOString() : new Date().toISOString();
+
+      const { error } = await supabaseClient
+        .from('personalliggare_events')
+        .insert([{
+          employee_id: employee.id,
+          employee_name: employee.full_name,
+          event_type: eventType,
+          event_time: eventTime,
+          created_by_employee_id: loggedInEmployee.id,
+          note: `Admin-korrigering av ${loggedInEmployee.full_name}: ${note}`
+        }]);
+
+      if (error) {
+        showUserStatus(`Kunde inte spara korrigeringen: ${error.message}`, 'error');
+        return;
+      }
+
+      correctionEmployeeSelect.value = '';
+      correctionTypeSelect.value = 'correction';
+      correctionTimeInput.value = '';
+      correctionNoteInput.value = '';
+
+      showUserStatus('Korrigeringen är sparad.', 'success');
+      await loadTodayList();
+      await loadAuditLog();
+      await loadMyHistory();
     }
 
     document.querySelectorAll('.pin-btn').forEach(button => {
@@ -863,6 +1016,12 @@ function printTodayList() {
     document.getElementById('downloadMyCsvBtn').addEventListener('click', downloadMyHistory);
     document.getElementById('downloadTodayCsvBtn').addEventListener('click', downloadTodayList);
     document.getElementById('printTodayBtn').addEventListener('click', printTodayList);
+
+    openCorrectionBtn.addEventListener('click', () => {
+      correctionBox.classList.toggle('hidden');
+    });
+
+    saveCorrectionBtn.addEventListener('click', saveCorrection);
 
     adminToggleBtn.addEventListener('click', async () => {
       adminCard.classList.toggle('hidden');

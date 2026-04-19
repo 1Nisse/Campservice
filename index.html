@@ -325,6 +325,7 @@
           <div class="small">Visa upp i lokalen eller exportera</div>
         </div>
         <button class="secondary-btn" id="downloadTodayCsvBtn" type="button">Ladda ner dagens liggare</button>
+        <button class="secondary-btn" id="printTodayBtn" type="button">Skriv ut dagens liggare</button>
       </div>
 
       <div class="list" id="todayList"></div>
@@ -675,24 +676,115 @@
     }
 
     function downloadCsv(rows, filename) {
-      const csvContent = rows
-        .map(row => row.map(escapeCsvValue).join(';'))
-        .join('\n');
+  const csvContent = rows
+    .map(row => row.map(escapeCsvValue).join(';'))
+    .join('\n');
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
 
-      link.href = url;
-      link.download = filename;
+  link.href = url;
+  link.download = filename;
 
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 
-      URL.revokeObjectURL(url);
-    }
+  URL.revokeObjectURL(url);
+}
 
+function printTodayList() {
+  const rows = Array.from(todayList.querySelectorAll('.row'));
+
+  if (rows.length === 0) {
+    showUserStatus('Det finns inget att skriva ut för idag.', 'error');
+    return;
+  }
+
+  const printWindow = window.open('', '_blank');
+
+  const rowsHtml = rows.map(row => {
+    const cells = row.querySelectorAll('strong, .muted, .pill');
+    const name = cells[0]?.textContent?.trim() || '';
+    const time = cells[1]?.textContent?.trim() || '';
+    const type = cells[2]?.textContent?.trim() || '';
+
+    return `
+      <tr>
+        <td>${name}</td>
+        <td>${time}</td>
+        <td>${type}</td>
+      </tr>
+    `;
+  }).join('');
+
+  const today = new Intl.DateTimeFormat('sv-SE', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  }).format(new Date());
+
+  printWindow.document.write(`
+    <!DOCTYPE html>
+    <html lang="sv">
+    <head>
+      <meta charset="UTF-8">
+      <title>Dagens personalliggare</title>
+      <style>
+        body {
+          font-family: Arial, Helvetica, sans-serif;
+          padding: 24px;
+          color: #111;
+        }
+        h1, p {
+          margin: 0 0 12px;
+        }
+        .meta {
+          margin-bottom: 24px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 16px;
+        }
+        th, td {
+          border: 1px solid #999;
+          padding: 10px;
+          text-align: left;
+        }
+        th {
+          background: #f2f2f2;
+        }
+      </style>
+    </head>
+    <body>
+      <h1>Haninge Campservice</h1>
+      <div class="meta">
+        <p><strong>Personalliggare</strong></p>
+        <p>Datum: ${today}</p>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Namn</th>
+            <th>Tid</th>
+            <th>Typ</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rowsHtml}
+        </tbody>
+      </table>
+    </body>
+    </html>
+  `);
+
+  printWindow.document.close();
+  printWindow.focus();
+  printWindow.print();
+}
     async function downloadMyHistory() {
       const { data, error } = await supabaseClient
         .from('personalliggare_events')
@@ -770,6 +862,7 @@
     document.getElementById('clockOutBtn').addEventListener('click', () => addEvent('out'));
     document.getElementById('downloadMyCsvBtn').addEventListener('click', downloadMyHistory);
     document.getElementById('downloadTodayCsvBtn').addEventListener('click', downloadTodayList);
+    document.getElementById('printTodayBtn').addEventListener('click', printTodayList);
 
     adminToggleBtn.addEventListener('click', async () => {
       adminCard.classList.toggle('hidden');

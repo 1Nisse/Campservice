@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Haninge Campservice | In/Ut-stämpling</title>
+  <title>Haninge Campservice | Personalliggare</title>
   <link rel="icon" type="image/png" href="favicon.png" />
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <style>
@@ -17,7 +17,7 @@
       --border: rgba(255, 152, 0, 0.25);
       --success: #2ecc71;
       --danger: #ff5c5c;
-      --shadow: 0 12px 35px rgba(0, 0, 0, 0.35);
+      --shadow: 0 12px 35px rgba(0,0,0,0.35);
       --radius: 18px;
     }
 
@@ -34,203 +34,146 @@
     }
 
     .container {
-      max-width: 1150px;
+      max-width: 980px;
       margin: 0 auto;
-      padding: 32px 20px 60px;
+      padding: 24px 18px 48px;
+    }
+
+    .header,
+    .card {
+      background: linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
     }
 
     .header {
       display: grid;
-      grid-template-columns: 130px 1fr;
-      gap: 22px;
+      grid-template-columns: 120px 1fr;
+      gap: 20px;
       align-items: center;
-      background: rgba(255, 255, 255, 0.02);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow);
-      border-radius: 24px;
       padding: 22px;
-      margin-bottom: 26px;
+      margin-bottom: 22px;
     }
 
     .header img {
       width: 100%;
-      max-width: 130px;
-      height: auto;
-      object-fit: contain;
+      max-width: 120px;
       display: block;
     }
 
     .header h1 {
-      margin: 0 0 8px;
-      font-size: clamp(1.8rem, 4vw, 2.7rem);
-      line-height: 1.1;
+      margin: 0 0 6px;
+      font-size: clamp(1.7rem, 4vw, 2.5rem);
     }
 
     .header p {
       margin: 0;
       color: var(--muted);
-      font-size: 1rem;
-    }
-
-    .grid {
-      display: grid;
-      grid-template-columns: 1.1fr 0.9fr;
-      gap: 22px;
     }
 
     .card {
-      background: linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
       padding: 22px;
+      margin-bottom: 22px;
     }
 
-    .card h2 {
-      margin-top: 0;
-      font-size: 1.35rem;
+    .hidden {
+      display: none;
     }
 
-    .form-row {
-      display: grid;
-      gap: 12px;
-      margin-bottom: 16px;
-    }
-
-    label {
-      font-weight: bold;
-      font-size: 0.95rem;
-    }
-
-    .employee-grid {
+    .employee-grid,
+    .pin-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 10px;
     }
 
-    .employee-btn {
-      width: 100%;
-      text-align: left;
-      background: #101010;
-      color: var(--text);
+    .employee-btn,
+    .pin-btn,
+    .action-btn,
+    .secondary-btn {
       border: 1px solid #333;
-      padding: 14px 15px;
       border-radius: 12px;
-      font-size: 0.98rem;
+      padding: 14px 16px;
+      font-size: 1rem;
       font-weight: bold;
       cursor: pointer;
-      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
-    }
-
-    .employee-btn:hover {
-      transform: translateY(-1px);
-      border-color: var(--accent);
+      color: var(--text);
+      background: #101010;
+      transition: transform 0.15s ease, opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
     }
 
     .employee-btn.active {
-      background: rgba(255, 152, 0, 0.14);
       border-color: var(--accent);
+      background: rgba(255,152,0,0.14);
       color: #ffd08a;
     }
 
-    .selected-person {
-      margin-top: 16px;
-      padding: 12px 14px;
-      border-radius: 12px;
+    .pin-display {
+      margin: 14px 0;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
       background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      color: var(--muted);
-      font-weight: bold;
+      letter-spacing: 6px;
+      font-size: 1.2rem;
+      text-align: center;
+      min-height: 58px;
     }
 
-    .month-select {
-      width: 100%;
-      padding: 14px 15px;
-      border-radius: 12px;
-      border: 1px solid #333;
-      background: #0b0b0b;
-      color: var(--text);
-      font-size: 1rem;
-      outline: none;
+    .pin-grid {
+      grid-template-columns: repeat(3, 1fr);
     }
 
-    .buttons {
+    .pin-btn:hover,
+    .employee-btn:hover,
+    .action-btn:hover,
+    .secondary-btn:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .action-row {
       display: flex;
       flex-wrap: wrap;
       gap: 12px;
-      margin-top: 18px;
+      margin-top: 14px;
     }
 
-    button {
-      border: none;
-      border-radius: 12px;
-      padding: 14px 18px;
-      font-size: 1rem;
-      font-weight: bold;
-      cursor: pointer;
-      transition: transform 0.15s ease, opacity 0.15s ease, background 0.15s ease;
-    }
-
-    button:hover {
-      transform: translateY(-1px);
-      opacity: 0.96;
-    }
-
-    .btn-primary {
+    .action-btn.in {
       background: var(--accent);
       color: #111;
+      border: none;
     }
 
-    .btn-secondary {
+    .action-btn.out {
       background: #2a2a2a;
-      color: white;
-      border: 1px solid #3d3d3d;
+    }
+
+    .secondary-btn {
+      background: #181818;
     }
 
     .status-box {
-      margin-top: 22px;
-      padding: 16px;
+      margin-top: 18px;
+      padding: 14px 16px;
       border-radius: 14px;
       background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      min-height: 62px;
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+      min-height: 56px;
       display: flex;
       align-items: center;
-      color: var(--muted);
     }
 
     .status-box.success {
-      border-color: rgba(46, 204, 113, 0.35);
       color: #c9f5da;
+      border-color: rgba(46,204,113,0.35);
     }
 
     .status-box.error {
-      border-color: rgba(255, 92, 92, 0.35);
       color: #ffd5d5;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 12px;
-      margin-bottom: 18px;
-    }
-
-    .stat {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 14px;
-      padding: 14px;
-    }
-
-    .stat small {
-      display: block;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .stat strong {
-      font-size: 1.2rem;
+      border-color: rgba(255,92,92,0.35);
     }
 
     .list {
@@ -239,25 +182,15 @@
       margin-top: 14px;
     }
 
-    .person-row,
-    .history-row {
+    .row {
       display: grid;
+      grid-template-columns: 1.2fr 1fr auto;
       gap: 8px;
       padding: 14px;
       border-radius: 14px;
       background: rgba(255,255,255,0.03);
       border: 1px solid rgba(255,255,255,0.06);
-    }
-
-    .person-row {
-      grid-template-columns: 1.3fr 1fr auto;
       align-items: center;
-    }
-
-    .history-row {
-      grid-template-columns: 1.2fr 0.9fr 0.8fr;
-      align-items: center;
-      font-size: 0.95rem;
     }
 
     .pill {
@@ -270,48 +203,36 @@
     }
 
     .pill.in {
-      background: rgba(46, 204, 113, 0.16);
+      background: rgba(46,204,113,0.16);
       color: #bff0d2;
-      border: 1px solid rgba(46, 204, 113, 0.35);
+      border: 1px solid rgba(46,204,113,0.35);
     }
 
     .pill.out {
-      background: rgba(255, 92, 92, 0.16);
+      background: rgba(255,92,92,0.16);
       color: #ffd3d3;
-      border: 1px solid rgba(255, 92, 92, 0.35);
+      border: 1px solid rgba(255,92,92,0.35);
     }
 
     .muted {
       color: var(--muted);
     }
 
-    .section-title {
+    .topbar {
       display: flex;
-      align-items: center;
       justify-content: space-between;
+      align-items: center;
       gap: 12px;
-      margin-bottom: 10px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
     }
 
-    .empty {
-      color: var(--muted);
-      padding: 12px 0;
-    }
-
-    footer {
-      margin-top: 24px;
-      color: #9e9e9e;
-      text-align: center;
+    .small {
       font-size: 0.9rem;
+      color: var(--muted);
     }
 
-    @media (max-width: 900px) {
-      .grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 640px) {
+    @media (max-width: 700px) {
       .header {
         grid-template-columns: 1fr;
         text-align: center;
@@ -321,17 +242,16 @@
         margin: 0 auto;
       }
 
-      .person-row,
-      .history-row,
-      .stats {
+      .row {
         grid-template-columns: 1fr;
       }
 
-      .buttons {
+      .action-row {
         flex-direction: column;
       }
 
-      button {
+      .action-btn,
+      .secondary-btn {
         width: 100%;
       }
     }
@@ -343,332 +263,410 @@
       <img src="logo.png" alt="Haninge Campservice logga" />
       <div>
         <h1>Haninge Campservice</h1>
-        <p>Digital in/ut-stämpling för personalen</p>
+        <p>Personalliggare – personlig inloggning med PIN</p>
       </div>
     </header>
 
-    <main class="grid">
-      <section class="card">
-        <h2>Stämpla in eller ut</h2>
-
-        <div class="form-row">
-          <label>Välj anställd</label>
-          <div class="employee-grid" id="employeeGrid">
-            <button type="button" class="employee-btn" data-name="Mikael Lundmark">Mikael Lundmark</button>
-            <button type="button" class="employee-btn" data-name="Peter Lundmark">Peter Lundmark</button>
-            <button type="button" class="employee-btn" data-name="Kent-Åke Lundmark">Kent-Åke Lundmark</button>
-            <button type="button" class="employee-btn" data-name="Annelie Lundmark">Annelie Lundmark</button>
-            <button type="button" class="employee-btn" data-name="Viggo Habolin-Wolkert">Viggo Habolin-Wolkert</button>
-            <button type="button" class="employee-btn" data-name="Nathalie Habolin">Nathalie Habolin</button>
-          </div>
-        </div>
-
-        <div class="selected-person" id="selectedPerson">Ingen vald ännu.</div>
-
-        <div class="form-row" style="margin-top: 18px;">
-          <label for="monthFilter">Välj månad</label>
-          <select id="monthFilter" class="month-select">
-            <option value="all">Alla månader</option>
-          </select>
-        </div>
-
-        <div class="buttons">
-          <button class="btn-primary" id="clockInBtn">Stämpla in</button>
-          <button class="btn-secondary" id="clockOutBtn">Stämpla ut</button>
-          <button class="btn-secondary" id="downloadCsvBtn">Ladda ner CSV för vald månad</button>
-        </div>
-
-        <div class="status-box" id="statusBox">Ansluter till databasen...</div>
-      </section>
-
-      <section class="card">
-        <h2>Översikt</h2>
-        <div class="stats">
-          <div class="stat">
-            <small>Inne just nu</small>
-            <strong id="insideCount">0</strong>
-          </div>
-          <div class="stat">
-            <small>Stämplingar i urvalet</small>
-            <strong id="todayCount">0</strong>
-          </div>
-        </div>
-
-        <div class="section-title">
-          <strong>Aktiv status</strong>
-        </div>
-        <div class="list" id="insideList"></div>
-      </section>
-    </main>
-
-    <section class="card" style="margin-top: 22px;">
-      <div class="section-title">
-        <h2 style="margin:0;">Senaste historik</h2>
-        <span class="muted">Sparas i Supabase</span>
+    <section class="card" id="loginCard">
+      <div class="topbar">
+        <h2 style="margin:0;">1. Välj person</h2>
+        <span class="small">Varje person stämplar bara sig själv</span>
       </div>
-      <div class="list" id="historyList"></div>
+
+      <div class="employee-grid" id="employeeGrid"></div>
+
+      <h2 style="margin-top:22px;">2. Ange PIN</h2>
+      <div class="pin-display" id="pinDisplay">------</div>
+
+      <div class="pin-grid">
+        <button class="pin-btn" type="button">1</button>
+        <button class="pin-btn" type="button">2</button>
+        <button class="pin-btn" type="button">3</button>
+        <button class="pin-btn" type="button">4</button>
+        <button class="pin-btn" type="button">5</button>
+        <button class="pin-btn" type="button">6</button>
+        <button class="pin-btn" type="button">7</button>
+        <button class="pin-btn" type="button">8</button>
+        <button class="pin-btn" type="button">9</button>
+        <button class="pin-btn" type="button" id="clearPinBtn">Rensa</button>
+        <button class="pin-btn" type="button">0</button>
+        <button class="pin-btn" type="button" id="loginBtn">Logga in</button>
+      </div>
+
+      <div class="status-box" id="statusBox">Välj person och ange PIN.</div>
     </section>
 
-    <footer>
-      © Haninge Campservice – in/ut-stämpling
-    </footer>
+    <section class="card hidden" id="userCard">
+      <div class="topbar">
+        <div>
+          <h2 style="margin:0;">Personalliggare</h2>
+          <div class="small" id="loggedInInfo"></div>
+        </div>
+        <button class="secondary-btn" id="logoutBtn" type="button">Logga ut</button>
+      </div>
+
+      <div class="action-row">
+        <button class="action-btn in" id="clockInBtn" type="button">Stämpla in</button>
+        <button class="action-btn out" id="clockOutBtn" type="button">Stämpla ut</button>
+        <button class="secondary-btn" id="downloadMyCsvBtn" type="button">Ladda ner min historik</button>
+        <button class="secondary-btn hidden" id="adminToggleBtn" type="button">Öppna adminvy</button>
+      </div>
+
+      <div class="status-box" id="userStatusBox">Inloggad och klar.</div>
+
+      <h3>Min senaste historik</h3>
+      <div class="list" id="myHistoryList"></div>
+    </section>
+
+    <section class="card hidden" id="adminCard">
+      <div class="topbar">
+        <div>
+          <h2 style="margin:0;">Adminvy – dagens personalliggare</h2>
+          <div class="small">Visa upp i lokalen eller exportera</div>
+        </div>
+        <button class="secondary-btn" id="downloadTodayCsvBtn" type="button">Ladda ner dagens liggare</button>
+      </div>
+
+      <div class="list" id="todayList"></div>
+
+      <h3 style="margin-top:22px;">Senaste audit-logg</h3>
+      <div class="list" id="auditList"></div>
+    </section>
   </div>
 
   <script>
     const SUPABASE_URL = 'https://hrlrgjeumbpaeelqkmot.supabase.co';
     const SUPABASE_ANON_KEY = 'sb_publishable_aVZnxeW1h38Nt8meTE5xWA_de0lFJN3';
-    const TABLE_NAME = 'clock_events';
+    const EDGE_FUNCTION_URL = 'https://hrlrgjeumbpaeelqkmot.supabase.co/functions/v1/employee-login';
 
     const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    const employeeButtons = document.querySelectorAll('.employee-btn');
-    const selectedPerson = document.getElementById('selectedPerson');
-    const clockInBtn = document.getElementById('clockInBtn');
-    const clockOutBtn = document.getElementById('clockOutBtn');
-    const downloadCsvBtn = document.getElementById('downloadCsvBtn');
+    const employeeGrid = document.getElementById('employeeGrid');
+    const pinDisplay = document.getElementById('pinDisplay');
     const statusBox = document.getElementById('statusBox');
-    const monthFilter = document.getElementById('monthFilter');
-    const insideList = document.getElementById('insideList');
-    const historyList = document.getElementById('historyList');
-    const insideCount = document.getElementById('insideCount');
-    const todayCount = document.getElementById('todayCount');
+    const userStatusBox = document.getElementById('userStatusBox');
+    const loginCard = document.getElementById('loginCard');
+    const userCard = document.getElementById('userCard');
+    const adminCard = document.getElementById('adminCard');
+    const loggedInInfo = document.getElementById('loggedInInfo');
+    const myHistoryList = document.getElementById('myHistoryList');
+    const todayList = document.getElementById('todayList');
+    const auditList = document.getElementById('auditList');
+    const adminToggleBtn = document.getElementById('adminToggleBtn');
 
-    let selectedEmployee = '';
-    let allEvents = [];
-    let selectedMonth = 'all';
-
-    function normalizeName(name) {
-      return (name || '').trim().replace(/\s+/g, ' ');
-    }
+    let employees = [];
+    let selectedEmployeeId = null;
+    let enteredPin = '';
+    let loggedInEmployee = null;
 
     function formatDateTime(dateString) {
-      const date = new Date(dateString);
       return new Intl.DateTimeFormat('sv-SE', {
         year: 'numeric',
         month: '2-digit',
         day: '2-digit',
         hour: '2-digit',
         minute: '2-digit'
-      }).format(date);
-    }
-
-    function formatDate(dateString) {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('sv-SE', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit'
-      }).format(date);
-    }
-
-    function formatTime(dateString) {
-      const date = new Date(dateString);
-      return new Intl.DateTimeFormat('sv-SE', {
-        hour: '2-digit',
-        minute: '2-digit'
-      }).format(date);
-    }
-
-    function getMonthKey(dateString) {
-      const date = new Date(dateString);
-      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-    }
-
-    function formatMonthLabel(monthKey) {
-      const [year, month] = monthKey.split('-').map(Number);
-      const date = new Date(year, month - 1, 1);
-      const monthName = new Intl.DateTimeFormat('sv-SE', { month: 'long' }).format(date);
-      return `${monthName.charAt(0).toUpperCase()}${monthName.slice(1)} ${year}`;
-    }
-
-    function setSelectedEmployee(name) {
-      selectedEmployee = name;
-      employeeButtons.forEach(button => {
-        button.classList.toggle('active', button.dataset.name === name);
-      });
-      selectedPerson.textContent = name ? `Vald anställd/filter: ${name}` : 'Ingen vald ännu.';
+      }).format(new Date(dateString));
     }
 
     function showStatus(message, type = '') {
       statusBox.textContent = message;
       statusBox.className = 'status-box';
-      if (type) {
-        statusBox.classList.add(type);
-      }
+      if (type) statusBox.classList.add(type);
     }
 
-    function getLatestStatusPerPerson(events) {
-      const latestByPerson = new Map();
+    function showUserStatus(message, type = '') {
+      userStatusBox.textContent = message;
+      userStatusBox.className = 'status-box';
+      if (type) userStatusBox.classList.add(type);
+    }
 
-      events.forEach(event => {
-        const key = event.employee_name.toLowerCase();
-        const existing = latestByPerson.get(key);
+    function updatePinDisplay() {
+      const hidden = enteredPin.padEnd(6, '-').replace(/\d/g, '*');
+      pinDisplay.textContent = hidden;
+    }
 
-        if (!existing || new Date(event.created_at) > new Date(existing.created_at)) {
-          latestByPerson.set(key, event);
+    function renderEmployees() {
+      employeeGrid.innerHTML = '';
+
+      employees.forEach(employee => {
+        const button = document.createElement('button');
+        button.className = 'employee-btn';
+        button.type = 'button';
+        button.textContent = employee.full_name;
+
+        if (selectedEmployeeId === employee.id) {
+          button.classList.add('active');
         }
-      });
 
-      return Array.from(latestByPerson.values());
-    }
-
-    function getPeopleInside(events) {
-      return getLatestStatusPerPerson(events)
-        .filter(event => event.event_type === 'in')
-        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-    }
-
-    function getFilteredEvents() {
-      let events = allEvents;
-
-      if (selectedMonth !== 'all') {
-        events = events.filter(event => getMonthKey(event.created_at) === selectedMonth);
-      }
-
-      if (selectedEmployee) {
-        events = events.filter(
-          event => event.employee_name.toLowerCase() === selectedEmployee.toLowerCase()
-        );
-      }
-
-      return events;
-    }
-
-    function populateMonthFilter() {
-      const monthKeys = Array.from(
-        new Set(allEvents.map(event => getMonthKey(event.created_at)))
-      ).sort().reverse();
-
-      const previousValue = selectedMonth;
-      monthFilter.innerHTML = '<option value="all">Alla månader</option>';
-
-      monthKeys.forEach(monthKey => {
-        const option = document.createElement('option');
-        option.value = monthKey;
-        option.textContent = formatMonthLabel(monthKey);
-        monthFilter.appendChild(option);
-      });
-
-      if (monthKeys.includes(previousValue) || previousValue === 'all') {
-        monthFilter.value = previousValue;
-        selectedMonth = previousValue;
-      } else {
-        monthFilter.value = 'all';
-        selectedMonth = 'all';
-      }
-    }
-
-    function render() {
-      populateMonthFilter();
-
-      const visibleEvents = getFilteredEvents();
-      const insidePeople = getPeopleInside(visibleEvents);
-
-      insideCount.textContent = insidePeople.length;
-      todayCount.textContent = visibleEvents.length;
-
-      insideList.innerHTML = '';
-      if (insidePeople.length === 0) {
-        insideList.innerHTML = `<div class="empty">${
-          selectedEmployee
-            ? `Ingen aktiv stämpling för ${selectedEmployee} i valt filter.`
-            : 'Ingen personal är instämplad just nu för vald månad.'
-        }</div>`;
-      } else {
-        insidePeople.forEach(person => {
-          const row = document.createElement('div');
-          row.className = 'person-row';
-          row.innerHTML = `
-            <strong>${person.employee_name}</strong>
-            <span class="muted">Sedan ${formatDateTime(person.created_at)}</span>
-            <span class="pill in">Inne</span>
-          `;
-          insideList.appendChild(row);
+        button.addEventListener('click', () => {
+          selectedEmployeeId = employee.id;
+          renderEmployees();
+          showStatus(`Vald person: ${employee.full_name}. Ange PIN.`, 'success');
         });
-      }
 
-      historyList.innerHTML = '';
-      if (visibleEvents.length === 0) {
-        historyList.innerHTML = `<div class="empty">${
-          selectedEmployee
-            ? `Ingen historik för ${selectedEmployee} i valt filter.`
-            : 'Ingen historik för vald månad ännu.'
-        }</div>`;
-      } else {
-        visibleEvents.slice(0, 50).forEach(event => {
-          const row = document.createElement('div');
-          row.className = 'history-row';
-          row.innerHTML = `
-            <strong>${event.employee_name}</strong>
-            <span class="muted">${formatDateTime(event.created_at)}</span>
-            <span class="pill ${event.event_type}">
-              ${event.event_type === 'in' ? 'Stämplat in' : 'Stämplat ut'}
-            </span>
-          `;
-          historyList.appendChild(row);
-        });
-      }
+        employeeGrid.appendChild(button);
+      });
     }
 
-    async function loadEvents() {
-      showStatus('Hämtar historik från databasen...');
-
+    async function loadEmployees() {
       const { data, error } = await supabaseClient
-        .from(TABLE_NAME)
-        .select('id, employee_name, event_type, created_at')
-        .order('created_at', { ascending: false });
+        .from('employees')
+        .select('id, full_name, is_admin, is_active')
+        .eq('is_active', true)
+        .order('full_name');
 
       if (error) {
-        console.error(error);
-        showStatus(`Kunde inte läsa från databasen: ${error.message}`, 'error');
+        showStatus(`Kunde inte hämta personal: ${error.message}`, 'error');
         return;
       }
 
-      allEvents = data || [];
-      render();
-      showStatus('Databasen är ansluten och klar.', 'success');
+      employees = data || [];
+      renderEmployees();
+    }
+
+    function getSelectedEmployee() {
+      return employees.find(employee => employee.id === selectedEmployeeId) || null;
+    }
+
+    async function login() {
+      const employee = getSelectedEmployee();
+
+      if (!employee) {
+        showStatus('Välj person först.', 'error');
+        return;
+      }
+
+      if (enteredPin.length !== 6) {
+        showStatus('PIN måste vara 6 siffror.', 'error');
+        return;
+      }
+
+      let response;
+      let result;
+
+      try {
+        response = await fetch(EDGE_FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            employeeId: employee.id,
+            pin: enteredPin
+          })
+        });
+
+        result = await response.json();
+      } catch (error) {
+        showStatus(`Kunde inte nå login-funktionen: ${String(error)}`, 'error');
+        return;
+      }
+
+      if (!response.ok || !result.success) {
+        showStatus(result.error || 'Fel PIN-kod.', 'error');
+        enteredPin = '';
+        updatePinDisplay();
+        return;
+      }
+
+      loggedInEmployee = result.employee;
+      loginCard.classList.add('hidden');
+      userCard.classList.remove('hidden');
+      loggedInInfo.textContent = `${loggedInEmployee.full_name} är inloggad.`;
+      adminToggleBtn.classList.toggle('hidden', !loggedInEmployee.is_admin);
+      showUserStatus('Inloggad och klar.', 'success');
+
+      enteredPin = '';
+      updatePinDisplay();
+
+      await loadMyHistory();
+
+      if (loggedInEmployee.is_admin) {
+        await loadTodayList();
+        await loadAuditLog();
+      }
+    }
+
+    function logout() {
+      loggedInEmployee = null;
+      selectedEmployeeId = null;
+      enteredPin = '';
+      updatePinDisplay();
+      renderEmployees();
+      adminCard.classList.add('hidden');
+      userCard.classList.add('hidden');
+      loginCard.classList.remove('hidden');
+      showStatus('Utloggad.', 'success');
     }
 
     async function addEvent(type) {
-      const name = normalizeName(selectedEmployee);
+      if (!loggedInEmployee) return;
 
-      if (!name) {
-        showStatus('Du måste välja en anställd först.', 'error');
+      const { data: latestData, error: latestError } = await supabaseClient
+        .from('personalliggare_events')
+        .select('event_type, event_time')
+        .eq('employee_id', loggedInEmployee.id)
+        .order('event_time', { ascending: false })
+        .limit(1);
+
+      if (latestError) {
+        showUserStatus(`Kunde inte kontrollera senaste status: ${latestError.message}`, 'error');
         return;
       }
 
-      const latestEvent = allEvents.find(
-        event => event.employee_name.toLowerCase() === name.toLowerCase()
-      );
+      const latest = latestData?.[0];
 
-      if (type === 'in' && latestEvent?.event_type === 'in') {
-        showStatus(`${name} är redan instämplad.`, 'error');
+      if (type === 'in' && latest?.event_type === 'in') {
+        showUserStatus('Du är redan instämplad.', 'error');
         return;
       }
 
-      if (type === 'out' && (!latestEvent || latestEvent.event_type === 'out')) {
-        showStatus(`${name} är inte instämplad just nu.`, 'error');
+      if (type === 'out' && (!latest || latest.event_type === 'out')) {
+        showUserStatus('Du är inte instämplad just nu.', 'error');
         return;
       }
-
-      showStatus('Sparar stämplingen i databasen...');
 
       const { error } = await supabaseClient
-        .from(TABLE_NAME)
-        .insert([{ employee_name: name, event_type: type }]);
+        .from('personalliggare_events')
+        .insert([{
+          employee_id: loggedInEmployee.id,
+          employee_name: loggedInEmployee.full_name,
+          event_type: type,
+          created_by_employee_id: loggedInEmployee.id,
+          note: 'Registrerad av användaren själv'
+        }]);
 
       if (error) {
-        console.error(error);
-        showStatus(`Kunde inte spara stämplingen: ${error.message}`, 'error');
+        showUserStatus(`Kunde inte spara stämplingen: ${error.message}`, 'error');
         return;
       }
 
-      await loadEvents();
-      setSelectedEmployee('');
-      showStatus(
-        `${name} ${type === 'in' ? 'stämplade in' : 'stämplade ut'} ${formatDateTime(new Date().toISOString())}.`,
+      showUserStatus(
+        `${loggedInEmployee.full_name} ${type === 'in' ? 'stämplade in' : 'stämplade ut'} ${formatDateTime(new Date().toISOString())}.`,
         'success'
       );
+
+      await loadMyHistory();
+
+      if (loggedInEmployee.is_admin) {
+        await loadTodayList();
+        await loadAuditLog();
+      }
+    }
+
+    async function loadMyHistory() {
+      const { data, error } = await supabaseClient
+        .from('personalliggare_events')
+        .select('id, employee_name, event_type, event_time')
+        .eq('employee_id', loggedInEmployee.id)
+        .order('event_time', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        myHistoryList.innerHTML = `<div class="muted">Kunde inte hämta historik: ${error.message}</div>`;
+        return;
+      }
+
+      myHistoryList.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        myHistoryList.innerHTML = '<div class="muted">Ingen historik ännu.</div>';
+        return;
+      }
+
+      data.forEach(event => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <strong>${event.employee_name}</strong>
+          <span class="muted">${formatDateTime(event.event_time)}</span>
+          <span class="pill ${event.event_type === 'in' ? 'in' : 'out'}">
+            ${event.event_type === 'in' ? 'Stämplat in' : 'Stämplat ut'}
+          </span>
+        `;
+        myHistoryList.appendChild(row);
+      });
+    }
+
+    function getTodayBounds() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+      return {
+        start: start.toISOString(),
+        end: end.toISOString()
+      };
+    }
+
+    async function loadTodayList() {
+      const { start, end } = getTodayBounds();
+
+      const { data, error } = await supabaseClient
+        .from('personalliggare_events')
+        .select('employee_name, event_type, event_time')
+        .gte('event_time', start)
+        .lte('event_time', end)
+        .order('event_time', { ascending: false });
+
+      if (error) {
+        todayList.innerHTML = `<div class="muted">Kunde inte hämta dagens liggare: ${error.message}</div>`;
+        return;
+      }
+
+      todayList.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        todayList.innerHTML = '<div class="muted">Ingen registrering idag ännu.</div>';
+        return;
+      }
+
+      data.forEach(event => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <strong>${event.employee_name}</strong>
+          <span class="muted">${formatDateTime(event.event_time)}</span>
+          <span class="pill ${event.event_type === 'in' ? 'in' : 'out'}">
+            ${event.event_type === 'in' ? 'In' : 'Ut'}
+          </span>
+        `;
+        todayList.appendChild(row);
+      });
+    }
+
+    async function loadAuditLog() {
+      const { data, error } = await supabaseClient
+        .from('audit_log')
+        .select('id, table_name, action, changed_at, new_data')
+        .order('changed_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        auditList.innerHTML = `<div class="muted">Kunde inte hämta audit-logg: ${error.message}</div>`;
+        return;
+      }
+
+      auditList.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        auditList.innerHTML = '<div class="muted">Ingen audit-logg ännu.</div>';
+        return;
+      }
+
+      data.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <strong>${item.action} i ${item.table_name}</strong>
+          <span class="muted">${formatDateTime(item.changed_at)}</span>
+          <span class="muted">${item.new_data?.employee_name || ''}</span>
+        `;
+        auditList.appendChild(row);
+      });
     }
 
     function escapeCsvValue(value) {
@@ -676,27 +674,7 @@
       return `"${stringValue.replace(/"/g, '""')}"`;
     }
 
-    function downloadCsv() {
-      const exportEvents = getFilteredEvents();
-
-      if (exportEvents.length === 0) {
-        showStatus('Det finns ingen historik att ladda ner för det valda filtret.', 'error');
-        return;
-      }
-
-      const rows = [
-        ['Namn', 'Typ', 'Datum', 'Tid'],
-        ...exportEvents
-          .slice()
-          .reverse()
-          .map(event => [
-            event.employee_name,
-            event.event_type === 'in' ? 'In' : 'Ut',
-            formatDate(event.created_at),
-            formatTime(event.created_at)
-          ])
-      ];
-
+    function downloadCsv(rows, filename) {
       const csvContent = rows
         .map(row => row.map(escapeCsvValue).join(';'))
         .join('\n');
@@ -705,73 +683,105 @@
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
 
-      const today = new Date();
-      const datePart = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
-      const filePart = selectedMonth === 'all'
-        ? `alla-manader-${datePart}`
-        : `${selectedMonth}-${datePart}`;
-
       link.href = url;
-      link.download = `haninge-campservice-stamplingar-${filePart}.csv`;
+      link.download = filename;
+
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
-      URL.revokeObjectURL(url);
 
-      showStatus('CSV-filen laddades ner.', 'success');
+      URL.revokeObjectURL(url);
     }
 
-    employeeButtons.forEach(button => {
+    async function downloadMyHistory() {
+      const { data, error } = await supabaseClient
+        .from('personalliggare_events')
+        .select('employee_name, event_type, event_time')
+        .eq('employee_id', loggedInEmployee.id)
+        .order('event_time', { ascending: true });
+
+      if (error) {
+        showUserStatus(`Kunde inte skapa export: ${error.message}`, 'error');
+        return;
+      }
+
+      const rows = [['Namn', 'Typ', 'Tid']].concat(
+        (data || []).map(item => [
+          item.employee_name,
+          item.event_type,
+          formatDateTime(item.event_time)
+        ])
+      );
+
+      downloadCsv(
+        rows,
+        `${loggedInEmployee.full_name.replace(/\s+/g, '-').toLowerCase()}-personalliggare.csv`
+      );
+
+      showUserStatus('Historik exporterad.', 'success');
+    }
+
+    async function downloadTodayList() {
+      const { start, end } = getTodayBounds();
+
+      const { data, error } = await supabaseClient
+        .from('personalliggare_events')
+        .select('employee_name, event_type, event_time')
+        .gte('event_time', start)
+        .lte('event_time', end)
+        .order('event_time', { ascending: true });
+
+      if (error) {
+        showUserStatus(`Kunde inte skapa dagens export: ${error.message}`, 'error');
+        return;
+      }
+
+      const rows = [['Namn', 'Typ', 'Tid']].concat(
+        (data || []).map(item => [
+          item.employee_name,
+          item.event_type,
+          formatDateTime(item.event_time)
+        ])
+      );
+
+      downloadCsv(rows, 'dagens-personalliggare.csv');
+      showUserStatus('Dagens personalliggare exporterad.', 'success');
+    }
+
+    document.querySelectorAll('.pin-btn').forEach(button => {
+      if (button.id === 'clearPinBtn' || button.id === 'loginBtn') return;
+
       button.addEventListener('click', () => {
-        const clickedName = button.dataset.name;
-        const isSameEmployee = selectedEmployee === clickedName;
-
-        setSelectedEmployee(isSameEmployee ? '' : clickedName);
-        render();
-
-        if (isSameEmployee) {
-          showStatus(
-            selectedMonth === 'all'
-              ? 'Personfiltret är borttaget. Visar alla anställda för alla månader.'
-              : `Personfiltret är borttaget. Visar alla anställda för ${formatMonthLabel(selectedMonth)}.`,
-            'success'
-          );
-        } else {
-          showStatus(
-            selectedMonth === 'all'
-              ? `Valt filter: ${clickedName} för alla månader.`
-              : `Valt filter: ${clickedName} för ${formatMonthLabel(selectedMonth)}.`,
-            'success'
-          );
-        }
+        if (enteredPin.length >= 6) return;
+        enteredPin += button.textContent.trim();
+        updatePinDisplay();
       });
     });
 
-    clockInBtn.addEventListener('click', () => addEvent('in'));
-    clockOutBtn.addEventListener('click', () => addEvent('out'));
-    downloadCsvBtn.addEventListener('click', downloadCsv);
-
-    monthFilter.addEventListener('change', (event) => {
-      selectedMonth = event.target.value;
-      render();
-
-      showStatus(
-        selectedMonth === 'all'
-          ? (
-              selectedEmployee
-                ? `Visar ${selectedEmployee} för alla månader.`
-                : 'Visar historik för alla månader.'
-            )
-          : (
-              selectedEmployee
-                ? `Visar ${selectedEmployee} för ${formatMonthLabel(selectedMonth)}.`
-                : `Visar historik för ${formatMonthLabel(selectedMonth)}.`
-            ),
-        'success'
-      );
+    document.getElementById('clearPinBtn').addEventListener('click', () => {
+      enteredPin = '';
+      updatePinDisplay();
+      showStatus('PIN rensad. Ange PIN igen.');
     });
 
-    loadEvents();
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('clockInBtn').addEventListener('click', () => addEvent('in'));
+    document.getElementById('clockOutBtn').addEventListener('click', () => addEvent('out'));
+    document.getElementById('downloadMyCsvBtn').addEventListener('click', downloadMyHistory);
+    document.getElementById('downloadTodayCsvBtn').addEventListener('click', downloadTodayList);
+
+    adminToggleBtn.addEventListener('click', async () => {
+      adminCard.classList.toggle('hidden');
+
+      if (!adminCard.classList.contains('hidden')) {
+        await loadTodayList();
+        await loadAuditLog();
+      }
+    });
+
+    updatePinDisplay();
+    loadEmployees();
   </script>
 </body>
 </html>

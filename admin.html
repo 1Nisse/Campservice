@@ -427,21 +427,22 @@
     }
 
     async function loadEmployees() {
-      const { data, error } = await supabaseClient
-        .from('employees')
-        .select('id, full_name, is_admin, is_active')
-        .eq('is_active', true)
-        .order('full_name');
+  const { data, error } = await supabaseClient
+    .from('employees')
+    .select('id, full_name, is_admin, is_active')
+    .eq('is_active', true)
+    .eq('is_admin', true)
+    .order('full_name');
 
-      if (error) {
-        showStatus(`Kunde inte hämta personal: ${error.message}`, 'error');
-        return;
-      }
+  if (error) {
+    showStatus(`Kunde inte hämta admin-personal: ${error.message}`, 'error');
+    return;
+  }
 
-      employees = data || [];
-      renderEmployees();
-      populateCorrectionEmployees();
-    }
+  employees = data || [];
+  renderEmployees();
+  populateCorrectionEmployees();
+}
 
     function getSelectedEmployee() {
       return employees.find(employee => employee.id === selectedEmployeeId) || null;

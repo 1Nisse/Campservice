@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Haninge Campservice | Admin</title>
+  <link rel="icon" type="image/png" href="favicon.png" />
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    :root {
+      --bg: #0d0d0d;
+      --card: #171717;
+      --card-2: #111111;
+      --text: #f5f5f5;
+      --muted: #bdbdbd;
+      --accent: #ff9800;
+      --border: rgba(255, 152, 0, 0.25);
+      --success: #2ecc71;
+      --danger: #ff5c5c;
+      --shadow: 0 12px 35px rgba(0,0,0,0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: linear-gradient(180deg, #000000 0%, #0c0c0c 100%);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px 18px 48px;
+    }
+
+    .header, .card {
+      background: linear-gradient(180deg, var(--card) 0%, var(--card-2) 100%);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      box-shadow: var(--shadow);
+    }
+
+    .header {
+      display: grid;
+      grid-template-columns: 120px 1fr;
+      gap: 20px;
+      align-items: center;
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .header img {
+      width: 100%;
+      max-width: 120px;
+      display: block;
+    }
+
+    .header h1 {
+      margin: 0 0 6px;
+      font-size: clamp(1.7rem, 4vw, 2.5rem);
+    }
+
+    .header p {
+      margin: 0;
+      color: var(--muted);
+    }
+
+    .card {
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .hidden { display: none; }
+
+    .employee-grid, .pin-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 10px;
+    }
+
+    .employee-btn, .pin-btn, .secondary-btn {
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 1rem;
+      font-weight: bold;
+      cursor: pointer;
+      color: var(--text);
+      background: #101010;
+      transition: transform 0.15s ease, opacity 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+
+    .employee-btn.active {
+      border-color: var(--accent);
+      background: rgba(255,152,0,0.14);
+      color: #ffd08a;
+    }
+
+    .pin-display {
+      margin: 14px 0;
+      padding: 16px;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: rgba(255,255,255,0.03);
+      letter-spacing: 6px;
+      font-size: 1.2rem;
+      text-align: center;
+      min-height: 58px;
+    }
+
+    .pin-grid { grid-template-columns: repeat(3, 1fr); }
+
+    .employee-btn:hover, .pin-btn:hover, .secondary-btn:hover {
+      opacity: 0.95;
+      transform: translateY(-1px);
+    }
+
+    .status-box {
+      margin-top: 18px;
+      padding: 14px 16px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--muted);
+      min-height: 56px;
+      display: flex;
+      align-items: center;
+    }
+
+    .status-box.success {
+      color: #c9f5da;
+      border-color: rgba(46,204,113,0.35);
+    }
+
+    .status-box.error {
+      color: #ffd5d5;
+      border-color: rgba(255,92,92,0.35);
+    }
+
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+    }
+
+    .small { font-size: 0.9rem; color: var(--muted); }
+
+    .action-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .list {
+      display: grid;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr auto;
+      gap: 8px;
+      padding: 14px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      align-items: center;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: bold;
+      width: fit-content;
+    }
+
+    .pill.in {
+      background: rgba(46,204,113,0.16);
+      color: #bff0d2;
+      border: 1px solid rgba(46,204,113,0.35);
+    }
+
+    .pill.out {
+      background: rgba(255,92,92,0.16);
+      color: #ffd3d3;
+      border: 1px solid rgba(255,92,92,0.35);
+    }
+
+    .pill.correction {
+      background: rgba(255, 152, 0, 0.16);
+      color: #ffd08a;
+      border: 1px solid rgba(255, 152, 0, 0.35);
+    }
+
+    .muted { color: var(--muted); }
+
+    .form-box {
+      margin-top: 22px;
+      padding: 16px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 14px;
+      background: rgba(255,255,255,0.03);
+    }
+
+    .form-box h3 { margin-top: 0; }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .field {
+      width: 100%;
+      padding: 12px;
+      border-radius: 10px;
+      background: #111;
+      color: #fff;
+      border: 1px solid #333;
+      font: inherit;
+    }
+
+    @media (max-width: 700px) {
+      .header {
+        grid-template-columns: 1fr;
+        text-align: center;
+      }
+      .header img { margin: 0 auto; }
+      .row { grid-template-columns: 1fr; }
+      .action-row { flex-direction: column; }
+      .secondary-btn { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <img src="logo.png" alt="Haninge Campservice logga" />
+      <div>
+        <h1>Haninge Campservice</h1>
+        <p>Admin – personalliggare</p>
+      </div>
+    </header>
+
+    <section class="card" id="loginCard">
+      <div class="topbar">
+        <h2 style="margin:0;">Admininloggning</h2>
+        <span class="small">Endast admin får logga in här</span>
+      </div>
+
+      <div class="employee-grid" id="employeeGrid"></div>
+
+      <h2 style="margin-top:22px;">Ange PIN</h2>
+      <div class="pin-display" id="pinDisplay">------</div>
+
+      <div class="pin-grid">
+        <button class="pin-btn" type="button">1</button>
+        <button class="pin-btn" type="button">2</button>
+        <button class="pin-btn" type="button">3</button>
+        <button class="pin-btn" type="button">4</button>
+        <button class="pin-btn" type="button">5</button>
+        <button class="pin-btn" type="button">6</button>
+        <button class="pin-btn" type="button">7</button>
+        <button class="pin-btn" type="button">8</button>
+        <button class="pin-btn" type="button">9</button>
+        <button class="pin-btn" type="button" id="clearPinBtn">Rensa</button>
+        <button class="pin-btn" type="button">0</button>
+        <button class="pin-btn" type="button" id="loginBtn">Logga in</button>
+      </div>
+
+      <div class="status-box" id="statusBox">Välj admin och ange PIN.</div>
+    </section>
+
+    <section class="card hidden" id="adminCard">
+      <div class="topbar">
+        <div>
+          <h2 style="margin:0;">Adminvy – dagens personalliggare</h2>
+          <div class="small" id="loggedInInfo"></div>
+        </div>
+        <button class="secondary-btn" id="logoutBtn" type="button">Logga ut</button>
+      </div>
+
+      <div class="action-row">
+        <button class="secondary-btn" id="downloadTodayCsvBtn" type="button">Ladda ner dagens liggare</button>
+        <button class="secondary-btn" id="printTodayBtn" type="button">Skriv ut dagens liggare</button>
+        <button class="secondary-btn" id="openCorrectionBtn" type="button">Visa/dölj korrigering</button>
+      </div>
+
+      <div class="status-box" id="adminStatusBox">Inloggad som admin.</div>
+
+      <div class="list" id="todayList"></div>
+
+      <div class="form-box hidden" id="correctionBox">
+        <h3>Lägg till korrigering</h3>
+        <div class="form-grid">
+          <select id="correctionEmployeeSelect" class="field">
+            <option value="">Välj person</option>
+          </select>
+
+          <select id="correctionTypeSelect" class="field">
+            <option value="correction">Korrigering</option>
+            <option value="in">Korrigering: In</option>
+            <option value="out">Korrigering: Ut</option>
+          </select>
+
+          <input id="correctionTimeInput" class="field" type="datetime-local" />
+
+          <input
+            id="correctionNoteInput"
+            class="field"
+            type="text"
+            placeholder="Beskriv varför korrigeringen görs"
+          />
+
+          <button class="secondary-btn" id="saveCorrectionBtn" type="button">Spara korrigering</button>
+        </div>
+      </div>
+
+      <h3 style="margin-top:22px;">Senaste audit-logg</h3>
+      <div class="list" id="auditList"></div>
+    </section>
+  </div>
+
+  <script>
+    const SUPABASE_URL = 'https://hrlrgjeumbpaeelqkmot.supabase.co';
+    const SUPABASE_ANON_KEY = 'sb_publishable_aVZnxeW1h38Nt8meTE5xWA_de0lFJN3';
+    const EDGE_FUNCTION_URL = 'https://hrlrgjeumbpaeelqkmot.supabase.co/functions/v1/employee-login';
+
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const employeeGrid = document.getElementById('employeeGrid');
+    const pinDisplay = document.getElementById('pinDisplay');
+    const statusBox = document.getElementById('statusBox');
+    const adminStatusBox = document.getElementById('adminStatusBox');
+    const loginCard = document.getElementById('loginCard');
+    const adminCard = document.getElementById('adminCard');
+    const loggedInInfo = document.getElementById('loggedInInfo');
+    const todayList = document.getElementById('todayList');
+    const auditList = document.getElementById('auditList');
+
+    const correctionBox = document.getElementById('correctionBox');
+    const openCorrectionBtn = document.getElementById('openCorrectionBtn');
+    const correctionEmployeeSelect = document.getElementById('correctionEmployeeSelect');
+    const correctionTypeSelect = document.getElementById('correctionTypeSelect');
+    const correctionTimeInput = document.getElementById('correctionTimeInput');
+    const correctionNoteInput = document.getElementById('correctionNoteInput');
+    const saveCorrectionBtn = document.getElementById('saveCorrectionBtn');
+
+    let employees = [];
+    let selectedEmployeeId = null;
+    let enteredPin = '';
+    let loggedInEmployee = null;
+
+    function formatDateTime(dateString) {
+      return new Intl.DateTimeFormat('sv-SE', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      }).format(new Date(dateString));
+    }
+
+    function showStatus(message, type = '') {
+      statusBox.textContent = message;
+      statusBox.className = 'status-box';
+      if (type) statusBox.classList.add(type);
+    }
+
+    function showAdminStatus(message, type = '') {
+      adminStatusBox.textContent = message;
+      adminStatusBox.className = 'status-box';
+      if (type) adminStatusBox.classList.add(type);
+    }
+
+    function updatePinDisplay() {
+      const hidden = enteredPin.padEnd(6, '-').replace(/\d/g, '*');
+      pinDisplay.textContent = hidden;
+    }
+
+    function renderEmployees() {
+      employeeGrid.innerHTML = '';
+
+      employees.forEach(employee => {
+        const button = document.createElement('button');
+        button.className = 'employee-btn';
+        button.type = 'button';
+        button.textContent = employee.full_name;
+
+        if (selectedEmployeeId === employee.id) {
+          button.classList.add('active');
+        }
+
+        button.addEventListener('click', () => {
+          selectedEmployeeId = employee.id;
+          renderEmployees();
+          showStatus(`Vald person: ${employee.full_name}. Ange PIN.`, 'success');
+        });
+
+        employeeGrid.appendChild(button);
+      });
+    }
+
+    function populateCorrectionEmployees() {
+      correctionEmployeeSelect.innerHTML = '<option value="">Välj person</option>';
+
+      employees.forEach(employee => {
+        const option = document.createElement('option');
+        option.value = employee.id;
+        option.textContent = employee.full_name;
+        correctionEmployeeSelect.appendChild(option);
+      });
+    }
+
+    async function loadEmployees() {
+      const { data, error } = await supabaseClient
+        .from('employees')
+        .select('id, full_name, is_admin, is_active')
+        .eq('is_active', true)
+        .order('full_name');
+
+      if (error) {
+        showStatus(`Kunde inte hämta personal: ${error.message}`, 'error');
+        return;
+      }
+
+      employees = data || [];
+      renderEmployees();
+      populateCorrectionEmployees();
+    }
+
+    function getSelectedEmployee() {
+      return employees.find(employee => employee.id === selectedEmployeeId) || null;
+    }
+
+    async function login() {
+      const employee = getSelectedEmployee();
+
+      if (!employee) {
+        showStatus('Välj person först.', 'error');
+        return;
+      }
+
+      if (enteredPin.length !== 6) {
+        showStatus('PIN måste vara 6 siffror.', 'error');
+        return;
+      }
+
+      let response;
+      let result;
+
+      try {
+        response = await fetch(EDGE_FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'apikey': SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          },
+          body: JSON.stringify({
+            employeeId: employee.id,
+            pin: enteredPin
+          })
+        });
+
+        result = await response.json();
+      } catch (error) {
+        showStatus(`Kunde inte nå login-funktionen: ${String(error)}`, 'error');
+        return;
+      }
+
+      if (!response.ok || !result.success) {
+        showStatus(result.error || 'Fel PIN-kod.', 'error');
+        enteredPin = '';
+        updatePinDisplay();
+        return;
+      }
+
+      if (!result.employee.is_admin) {
+        showStatus('Den här personen är inte admin.', 'error');
+        enteredPin = '';
+        updatePinDisplay();
+        return;
+      }
+
+      loggedInEmployee = result.employee;
+      loginCard.classList.add('hidden');
+      adminCard.classList.remove('hidden');
+      loggedInInfo.textContent = `${loggedInEmployee.full_name} är inloggad som admin.`;
+      showAdminStatus('Inloggad som admin.', 'success');
+
+      enteredPin = '';
+      updatePinDisplay();
+
+      await loadTodayList();
+      await loadAuditLog();
+    }
+
+    function logout() {
+      loggedInEmployee = null;
+      selectedEmployeeId = null;
+      enteredPin = '';
+      updatePinDisplay();
+      renderEmployees();
+      populateCorrectionEmployees();
+      correctionBox.classList.add('hidden');
+      adminCard.classList.add('hidden');
+      loginCard.classList.remove('hidden');
+      showStatus('Utloggad.', 'success');
+    }
+
+    function getTodayBounds() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
+      const end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59);
+
+      return {
+        start: start.toISOString(),
+        end: end.toISOString()
+      };
+    }
+
+    async function loadTodayList() {
+      const { start, end } = getTodayBounds();
+
+      const { data, error } = await supabaseClient
+        .from('personalliggare_events')
+        .select('employee_name, event_type, event_time, note')
+        .gte('event_time', start)
+        .lte('event_time', end)
+        .order('event_time', { ascending: false });
+
+      if (error) {
+        todayList.innerHTML = `<div class="muted">Kunde inte hämta dagens liggare: ${error.message}</div>`;
+        return;
+      }
+
+      todayList.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        todayList.innerHTML = '<div class="muted">Ingen registrering idag ännu.</div>';
+        return;
+      }
+
+      data.forEach(event => {
+        const typeClass = event.event_type === 'in' ? 'in' : event.event_type === 'out' ? 'out' : 'correction';
+        const typeLabel = event.event_type === 'in'
+          ? 'In'
+          : event.event_type === 'out'
+            ? 'Ut'
+            : 'Korrigering';
+
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <strong>${event.employee_name}</strong>
+          <span class="muted">${formatDateTime(event.event_time)}${event.note ? `<br>${event.note}` : ''}</span>
+          <span class="pill ${typeClass}">${typeLabel}</span>
+        `;
+        todayList.appendChild(row);
+      });
+    }
+
+    async function loadAuditLog() {
+      const { data, error } = await supabaseClient
+        .from('audit_log')
+        .select('id, table_name, action, changed_at, new_data')
+        .order('changed_at', { ascending: false })
+        .limit(20);
+
+      if (error) {
+        auditList.innerHTML = `<div class="muted">Kunde inte hämta audit-logg: ${error.message}</div>`;
+        return;
+      }
+
+      auditList.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        auditList.innerHTML = '<div class="muted">Ingen audit-logg ännu.</div>';
+        return;
+      }
+
+      data.forEach(item => {
+        const row = document.createElement('div');
+        row.className = 'row';
+        row.innerHTML = `
+          <strong>${item.action} i ${item.table_name}</strong>
+          <span class="muted">${formatDateTime(item.changed_at)}</span>
+          <span class="muted">${item.new_data?.employee_name || ''}</span>
+        `;
+        auditList.appendChild(row);
+      });
+    }
+
+    function escapeCsvValue(value) {
+      const stringValue = String(value ?? '');
+      return `"${stringValue.replace(/"/g, '""')}"`;
+    }
+
+    function downloadCsv(rows, filename) {
+      const csvContent = rows
+        .map(row => row.map(escapeCsvValue).join(';'))
+        .join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+
+      link.href = url;
+      link.download = filename;
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      URL.revokeObjectURL(url);
+    }
+
+    async function downloadTodayList() {
+      const { start, end } = getTodayBounds();
+
+      const { data, error } = await supabaseClient
+        .from('personalliggare_events')
+        .select('employee_name, event_type, event_time, note')
+        .gte('event_time', start)
+        .lte('event_time', end)
+        .order('event_time', { ascending: true });
+
+      if (error) {
+        showAdminStatus(`Kunde inte skapa dagens export: ${error.message}`, 'error');
+        return;
+      }
+
+      const rows = [['Namn', 'Typ', 'Tid', 'Notering']].concat(
+        (data || []).map(item => [
+          item.employee_name,
+          item.event_type,
+          formatDateTime(item.event_time),
+          item.note || ''
+        ])
+      );
+
+      downloadCsv(rows, 'dagens-personalliggare.csv');
+      showAdminStatus('Dagens personalliggare exporterad.', 'success');
+    }
+
+    function printTodayList() {
+      const rows = Array.from(todayList.querySelectorAll('.row'));
+
+      if (rows.length === 0) {
+        showAdminStatus('Det finns inget att skriva ut för idag.', 'error');
+        return;
+      }
+
+      const printWindow = window.open('', '_blank');
+
+      const rowsHtml = rows.map(row => {
+        const cells = row.querySelectorAll('strong, .muted, .pill');
+        const name = cells[0]?.textContent?.trim() || '';
+        const time = cells[1]?.textContent?.trim() || '';
+        const type = cells[2]?.textContent?.trim() || '';
+
+        return `
+          <tr>
+            <td>${name}</td>
+            <td>${time}</td>
+            <td>${type}</td>
+          </tr>
+        `;
+      }).join('');
+
+      const today = new Intl.DateTimeFormat('sv-SE', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(new Date());
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html lang="sv">
+        <head>
+          <meta charset="UTF-8">
+          <title>Dagens personalliggare</title>
+          <style>
+            body {
+              font-family: Arial, Helvetica, sans-serif;
+              padding: 24px;
+              color: #111;
+            }
+            h1, p {
+              margin: 0 0 12px;
+            }
+            .meta {
+              margin-bottom: 24px;
+            }
+            table {
+              width: 100%;
+              border-collapse: collapse;
+              margin-top: 16px;
+            }
+            th, td {
+              border: 1px solid #999;
+              padding: 10px;
+              text-align: left;
+            }
+            th {
+              background: #f2f2f2;
+            }
+          </style>
+        </head>
+        <body>
+          <h1>Haninge Campservice</h1>
+          <div class="meta">
+            <p><strong>Personalliggare</strong></p>
+            <p>Datum: ${today}</p>
+          </div>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Namn</th>
+                <th>Tid</th>
+                <th>Typ</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${rowsHtml}
+            </tbody>
+          </table>
+        </body>
+        </html>
+      `);
+
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    }
+
+    async function saveCorrection() {
+      if (!loggedInEmployee || !loggedInEmployee.is_admin) {
+        showAdminStatus('Endast admin kan lägga till korrigeringar.', 'error');
+        return;
+      }
+
+      const employeeId = Number(correctionEmployeeSelect.value);
+      const eventType = correctionTypeSelect.value;
+      const note = correctionNoteInput.value.trim();
+      const selectedTime = correctionTimeInput.value;
+
+      if (!employeeId) {
+        showAdminStatus('Välj person för korrigeringen.', 'error');
+        return;
+      }
+
+      if (!note) {
+        showAdminStatus('Skriv en förklaring till korrigeringen.', 'error');
+        return;
+      }
+
+      const employee = employees.find(item => item.id === employeeId);
+      if (!employee) {
+        showAdminStatus('Kunde inte hitta vald person.', 'error');
+        return;
+      }
+
+      const eventTime = selectedTime ? new Date(selectedTime).toISOString() : new Date().toISOString();
+
+      const { error } = await supabaseClient
+        .from('personalliggare_events')
+        .insert([{
+          employee_id: employee.id,
+          employee_name: employee.full_name,
+          event_type: eventType,
+          event_time: eventTime,
+          created_by_employee_id: loggedInEmployee.id,
+          note: `Admin-korrigering av ${loggedInEmployee.full_name}: ${note}`
+        }]);
+
+      if (error) {
+        showAdminStatus(`Kunde inte spara korrigeringen: ${error.message}`, 'error');
+        return;
+      }
+
+      correctionEmployeeSelect.value = '';
+      correctionTypeSelect.value = 'correction';
+      correctionTimeInput.value = '';
+      correctionNoteInput.value = '';
+
+      showAdminStatus('Korrigeringen är sparad.', 'success');
+      await loadTodayList();
+      await loadAuditLog();
+    }
+
+    document.querySelectorAll('.pin-btn').forEach(button => {
+      if (button.id === 'clearPinBtn' || button.id === 'loginBtn') return;
+
+      button.addEventListener('click', () => {
+        if (enteredPin.length >= 6) return;
+        enteredPin += button.textContent.trim();
+        updatePinDisplay();
+      });
+    });
+
+    document.getElementById('clearPinBtn').addEventListener('click', () => {
+      enteredPin = '';
+      updatePinDisplay();
+      showStatus('PIN rensad. Ange PIN igen.');
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+    document.getElementById('downloadTodayCsvBtn').addEventListener('click', downloadTodayList);
+    document.getElementById('printTodayBtn').addEventListener('click', printTodayList);
+
+    openCorrectionBtn.addEventListener('click', () => {
+      correctionBox.classList.toggle('hidden');
+    });
+
+    saveCorrectionBtn.addEventListener('click', saveCorrection);
+
+    updatePinDisplay();
+    loadEmployees();
+  </script>
+</body>
+</html>

@@ -620,6 +620,41 @@
     document.getElementById('clockOutBtn').addEventListener('click', () => addEvent('out'));
     document.getElementById('downloadMyCsvBtn').addEventListener('click', downloadMyHistory);
 
+document.addEventListener('keydown', (event) => {
+  const activeLoginCard = !loginCard.classList.contains('hidden');
+  if (!activeLoginCard) return;
+
+  const key = event.key;
+
+  if (/^[0-9]$/.test(key)) {
+    if (enteredPin.length < 6) {
+      enteredPin += key;
+      updatePinDisplay();
+    }
+    event.preventDefault();
+    return;
+  }
+
+  if (key === 'Backspace') {
+    enteredPin = enteredPin.slice(0, -1);
+    updatePinDisplay();
+    event.preventDefault();
+    return;
+  }
+
+  if (key === 'Delete') {
+    enteredPin = '';
+    updatePinDisplay();
+    event.preventDefault();
+    return;
+  }
+
+  if (key === 'Enter') {
+    login();
+    event.preventDefault();
+  }
+});
+
     updatePinDisplay();
     loadEmployees();
   </script>

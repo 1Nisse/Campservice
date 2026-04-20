@@ -360,7 +360,8 @@
     const correctionNoteInput = document.getElementById('correctionNoteInput');
     const saveCorrectionBtn = document.getElementById('saveCorrectionBtn');
 
-    let employees = [];
+    let adminEmployees = [];
+    let allEmployees = [];
     let selectedEmployeeId = null;
     let enteredPin = '';
     let loggedInEmployee = null;
@@ -393,60 +394,61 @@
     }
 
     function renderEmployees() {
-      employeeGrid.innerHTML = '';
+  employeeGrid.innerHTML = '';
 
-      employees.forEach(employee => {
-        const button = document.createElement('button');
-        button.className = 'employee-btn';
-        button.type = 'button';
-        button.textContent = employee.full_name;
+  adminEmployees.forEach(employee => {
+    const button = document.createElement('button');
+    button.className = 'employee-btn';
+    button.type = 'button';
+    button.textContent = employee.full_name;
 
-        if (selectedEmployeeId === employee.id) {
-          button.classList.add('active');
-        }
-
-        button.addEventListener('click', () => {
-          selectedEmployeeId = employee.id;
-          renderEmployees();
-          showStatus(`Vald person: ${employee.full_name}. Ange PIN.`, 'success');
-        });
-
-        employeeGrid.appendChild(button);
-      });
+    if (selectedEmployeeId === employee.id) {
+      button.classList.add('active');
     }
+
+    button.addEventListener('click', () => {
+      selectedEmployeeId = employee.id;
+      renderEmployees();
+      showStatus(`Vald person: ${employee.full_name}. Ange PIN.`, 'success');
+    });
+
+    employeeGrid.appendChild(button);
+  });
+}
 
     function populateCorrectionEmployees() {
-      correctionEmployeeSelect.innerHTML = '<option value="">Välj person</option>';
+  correctionEmployeeSelect.innerHTML = '<option value="">Välj person</option>';
 
-      employees.forEach(employee => {
-        const option = document.createElement('option');
-        option.value = employee.id;
-        option.textContent = employee.full_name;
-        correctionEmployeeSelect.appendChild(option);
-      });
-    }
+  allEmployees.forEach(employee => {
+    const option = document.createElement('option');
+    option.value = employee.id;
+    option.textContent = employee.full_name;
+    correctionEmployeeSelect.appendChild(option);
+  });
+}
 
     async function loadEmployees() {
   const { data, error } = await supabaseClient
     .from('employees')
     .select('id, full_name, is_admin, is_active')
     .eq('is_active', true)
-    .eq('is_admin', true)
     .order('full_name');
 
   if (error) {
-    showStatus(`Kunde inte hämta admin-personal: ${error.message}`, 'error');
+    showStatus(`Kunde inte hämta personal: ${error.message}`, 'error');
     return;
   }
 
-  employees = data || [];
+  allEmployees = data || [];
+  adminEmployees = allEmployees.filter(employee => employee.is_admin === true);
+
   renderEmployees();
   populateCorrectionEmployees();
 }
 
     function getSelectedEmployee() {
-      return employees.find(employee => employee.id === selectedEmployeeId) || null;
-    }
+  return adminEmployees.find(employee => employee.id === selectedEmployeeId) || null;
+}
 
     async function login() {
       const employee = getSelectedEmployee();
@@ -772,7 +774,7 @@
         return;
       }
 
-      const employee = employees.find(item => item.id === employeeId);
+      const employee = allEmployees.find(item => item.id === employeeId);
       if (!employee) {
         showAdminStatus('Kunde inte hitta vald person.', 'error');
         return;
